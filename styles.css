@@ -1,0 +1,91 @@
+body {
+  animation: rotate-bg-color 10s infinite;
+font-family: Arial, sans-serif;
+text-align: center;
+padding: 50px;
+}
+@keyframes rotate-bg-color {
+  0% {
+    background-color: steelblue;
+  }
+  10% {
+    background-color: red;
+  }
+  20% {
+    background-color: orange;
+  }
+  30% {
+    background-color: yellow;
+  }
+  40% {
+    background-color: green;
+  }
+  50% {
+    background-color: blue;
+  }
+  60% {
+    background-color: indigo;
+  }
+  70% {
+    background-color: violet;
+  }
+  80% {
+    background-color: pink;
+  }
+  90% {
+    background-color: brown;
+  }
+  100% {
+    background-color: black;
+  }
+}
+button {
+background-color: magenta;
+color: white;
+box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.2);
+padding: 10px 20px;
+border: none;
+border-radius: 5px;
+cursor: pointer;
+}
+button:hover {
+background-color: green;
+transform: scale(1.2);
+box-shadow: 4px 8px 12px rgba(0, 0, 0, 0.3);
+}
+.prank-gif {
+transition: transform 0.5s ease;
+position: relative;
+top: 0;
+height: auto;
+width: 500px;
+margin-top: 50px;
+border-radius: 10px;
+display: block;
+margin-left: auto;
+margin-right: auto;
+margin-bottom: 50px;
+}
+#gotchaGif {
+transition: transform 0.5s ease;
+position: relative;
+top: 0;
+height: auto;
+width: 1000px;
+margin-top: 50px;
+border-radius: 10px;
+display: block;
+margin-left: auto;
+margin-right: auto;
+margin-bottom: 50px;
+}
+h1 {
+text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+font-size: 80px;
+}
+#hiddenMessage {
+font-size: 6em; 
+font-weight: bold; 
+color: red; 
+margin-top: 50px;
+}
