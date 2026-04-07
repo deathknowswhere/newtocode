@@ -1,16 +1,235 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<link rel="stylesheet" type="text/css" href="styles.css">
-<title>:)</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAM - Strategy Analysis Manager</title>
+
+  <!-- PHASE 1: Tailwind CDN for rapid premium dashboard styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- PHASE 1: Core app styles -->
+  <link rel="stylesheet" href="assets/css/style.css" />
 </head>
-<body>
-<H1>Do Not Click for a Surprise!</H1>
-<img src="https://media.tenor.com/INxOxm6Gz0cAAAAm/skeleton-esqueleto.webp" alt="skeleton gif" class="prank-gif">
-<button>heheheheh</button>
-<p id="hiddenMessage" style="display: none;">Gotcha!</p>
-<img id="gotchaGif" src="https://media1.tenor.com/m/HNObdUglgfgAAAAd/skeleton-banging-shield.gif" style="display: none;" alt="Bang-Gif">
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
-<script src="script.js"></script>
+<body class="sam-body min-h-screen text-slate-100">
+  <!-- PHASE 1: App shell -->
+  <div class="min-h-screen lg:grid lg:grid-cols-[280px_1fr]">
+
+    <!-- PHASE 1: Left Sidebar Navigation -->
+    <!-- PHASE 5: flex-col so the "Talk to SAM" button pins to bottom via mt-auto -->
+    <aside class="sam-sidebar border-r border-slate-700/70 p-4 lg:p-6 flex flex-col">
+      <div class="mb-8">
+        <p class="text-2xl font-extrabold tracking-wider text-white">SAM</p>
+        <p class="text-sm text-slate-400">Strategy Analysis Manager</p>
+      </div>
+
+      <nav aria-label="Primary" class="space-y-2" id="sidebar-nav">
+        <button class="sam-nav-item is-active" data-page="Dashboard">Dashboard</button>
+        <!-- PHASE 2: Log Trade navigates to log.html -->
+        <button class="sam-nav-item" data-page="Log Trade" data-href="log.html">Log Trade</button>
+        <!-- PHASE 3: Journal navigates to journal.html -->
+        <button class="sam-nav-item" data-page="Journal" data-href="journal.html">Journal</button>
+        <button class="sam-nav-item" data-page="AI Buddy" data-href="chat.html">🤖 AI Buddy</button>
+        <button class="sam-nav-item" data-page="Streak Calendar">Streak Calendar</button>
+        <button class="sam-nav-item" data-page="Settings">Settings</button>
+      </nav>
+
+      <!-- PHASE 5: Persistent "Talk to SAM" CTA at the bottom of the sidebar -->
+      <div class="mt-auto pt-6">
+        <a
+          href="chat.html"
+          class="flex items-center gap-3 rounded-xl border border-emerald-700/40 bg-emerald-900/20
+                 p-3 text-sm text-emerald-400 hover:bg-emerald-900/35 hover:border-emerald-600/60
+                 transition-all group"
+          aria-label="Open SAM AI Chat"
+        >
+          <span class="text-xl" aria-hidden="true">🔥</span>
+          <div>
+            <p class="font-semibold text-white group-hover:text-emerald-300 transition-colors">Talk to SAM</p>
+            <p class="text-xs text-slate-500">Ask anything about your trades</p>
+          </div>
+          <span class="ml-auto text-slate-600 group-hover:text-emerald-500 transition-colors text-lg">→</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- PHASE 1: Main Dashboard -->
+    <main class="p-4 sm:p-6 lg:p-8">
+      <!-- PHASE 1: Top Navbar -->
+      <header class="sam-card mb-6 flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div>
+          <h1 class="text-xl font-bold text-white sm:text-2xl">SAM</h1>
+          <p class="text-slate-400">Strategy Analysis Manager</p>
+        </div>
+        <div class="rounded-xl bg-slate-900/70 px-4 py-2 text-right">
+          <p class="text-xs uppercase tracking-widest text-slate-400">Market Time</p>
+          <p id="current-time" class="text-lg font-semibold text-slate-100">--:--:-- ET</p>
+          <p id="market-status" class="text-xs font-bold text-slate-500">● LOADING</p>
+        </div>
+      </header>
+
+      <!-- PHASE 1: Dashboard Grid -->
+      <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr]" aria-label="Dashboard Overview">
+        <div class="space-y-6">
+          <!-- PHASE 1: Daily Streak Score Card -->
+          <article class="sam-card p-5 sm:p-6" aria-labelledby="streak-heading">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <h2 id="streak-heading" class="text-lg font-bold text-white">Daily Streak Score</h2>
+                <p class="text-slate-400">Consistency compounds faster than luck.</p>
+              </div>
+              <button
+                class="streak-tooltip rounded-lg border border-slate-700 px-3 py-1 text-xs text-slate-300"
+                title="Breakdown: +50 consistency, +20 risk discipline, +15 journaling"
+                aria-label="Streak points breakdown"
+              >
+                Breakdown
+              </button>
+            </div>
+
+            <div class="mt-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div class="flex items-center gap-3">
+                <span class="flame-pulse text-5xl" aria-hidden="true">🔥</span>
+                <div>
+                  <p id="streak-days" class="text-3xl font-extrabold text-white">12-day streak</p>
+                  <p class="text-slate-300"><span id="streak-score">85</span>/100 points today</p>
+                </div>
+              </div>
+              <div class="w-full max-w-xs rounded-xl border border-slate-700 bg-slate-900/70 p-3">
+                <p class="text-xs uppercase tracking-wider text-slate-400">Streak Momentum</p>
+                <p id="streak-momentum" class="mt-1 text-lg font-semibold text-orange-400">On fire</p>
+              </div>
+            </div>
+          </article>
+
+          <!-- PHASE 1: Custom Market Watchlist -->
+          <article class="sam-card p-5 sm:p-6" aria-labelledby="watchlist-heading">
+            <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h2 id="watchlist-heading" class="text-lg font-bold text-white">My Markets</h2>
+              <button id="add-symbol-btn" class="sam-btn sam-btn-primary" type="button">+ Add Symbol</button>
+            </div>
+
+            <form id="symbol-form" class="mb-5" autocomplete="off">
+              <label for="symbol-input" class="mb-2 block text-sm text-slate-300">Search and add symbol</label>
+              <div class="flex flex-col gap-3 sm:flex-row">
+                <input
+                  id="symbol-input"
+                  name="symbol"
+                  type="text"
+                  placeholder="Type AAPL, ES=F, NQ=F..."
+                  class="sam-input"
+                />
+                <button class="sam-btn sam-btn-secondary" type="submit">Add To Watchlist</button>
+              </div>
+            </form>
+
+            <div id="watchlist-grid" class="watchlist-grid" aria-live="polite"></div>
+          </article>
+
+          <!-- PHASE 1 / PHASE 2 / PHASE 3: Open Trades List – dynamically rendered from localStorage -->
+          <article class="sam-card p-5 sm:p-6" aria-labelledby="open-trades-heading">
+            <div class="mb-4 flex items-center justify-between gap-3">
+              <h2 id="open-trades-heading" class="text-lg font-bold text-white">Open Trades</h2>
+              <div class="flex gap-2">
+                <!-- PHASE 2: Quick-navigate to logger -->
+                <a href="log.html" class="sam-btn sam-btn-primary text-sm">+ Log Entry</a>
+                <!-- PHASE 3: Full journal view -->
+                <a href="journal.html" class="sam-btn sam-btn-secondary text-sm">📖 Journal</a>
+              </div>
+            </div>
+            <!-- PHASE 2: Populated by renderOpenTrades() in main.js -->
+            <div id="open-trades-list" class="grid gap-3 sm:grid-cols-2" aria-live="polite"></div>
+            <!-- PHASE 3: View all trades link shown below the open trades list -->
+            <div class="mt-4 text-center">
+              <a href="journal.html" class="text-sm text-slate-500 hover:text-emerald-400 transition-colors">
+                View full trade history →
+              </a>
+            </div>
+          </article>
+        </div>
+
+        <div class="space-y-6">
+          <!-- PHASE 1 / PHASE 3: Today's P&L Summary – now reads real trade data -->
+          <article class="sam-card p-5 sm:p-6" aria-labelledby="pnl-heading">
+            <h2 id="pnl-heading" class="text-lg font-bold text-white">Today's P&L</h2>
+            <!-- PHASE 3: Populated by renderTodayPnL() in main.js using real trade data -->
+            <p id="today-pnl" class="mt-2 text-3xl font-extrabold text-slate-500">$0.00</p>
+            <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+              <div class="rounded-lg bg-slate-900/80 p-3">
+                <p class="text-slate-400">Win Rate</p>
+                <p id="today-winrate" class="font-semibold text-slate-100">—</p>
+              </div>
+              <div class="rounded-lg bg-slate-900/80 p-3">
+                <p class="text-slate-400">Trades Today</p>
+                <p id="today-tradecount" class="font-semibold text-slate-100">—</p>
+              </div>
+            </div>
+            <!-- PHASE 3: Quick link to full journal -->
+            <a href="journal.html?range=today" class="mt-3 block text-xs text-center text-slate-500 hover:text-emerald-400 transition-colors">
+              See today's trades in journal →
+            </a>
+          </article>
+
+          <!-- PHASE 1 / PHASE 4: SAM Daily Insight – now powered by real AI analysis -->
+          <article class="sam-card p-5 sm:p-6" aria-labelledby="insight-heading">
+            <div class="flex items-center justify-between gap-3 mb-3">
+              <h2 id="insight-heading" class="text-lg font-bold text-white">SAM's Daily Insight</h2>
+              <span class="text-xs px-2 py-1 rounded-full border border-emerald-700/50 text-emerald-500 font-semibold">
+                🤖 AI
+              </span>
+            </div>
+            <!-- PHASE 4: Populated by renderSAMDailyInsight() in main.js -->
+            <div id="sam-insight-body" class="text-slate-400 text-sm leading-relaxed">
+              Loading insight…
+            </div>
+            <div class="mt-4 flex flex-wrap gap-3">
+              <!-- PHASE 4: Triggers generateDailySummary() for all of today's trades -->
+              <button
+                id="daily-summary-btn"
+                class="sam-btn sam-btn-primary text-sm py-2"
+                type="button"
+              >
+                ⚡ Get Today's SAM Summary
+              </button>
+              <a href="journal.html" class="sam-btn sam-btn-secondary text-sm py-2">
+                📖 View Journal
+              </a>
+              <!-- PHASE 5: Talk to SAM chat link in insight card -->
+              <a href="chat.html" class="sam-btn sam-btn-secondary text-sm py-2">
+                💬 Chat with SAM
+              </a>
+            </div>
+            <!-- PHASE 4: Summary output area -->
+            <div id="daily-summary-area" class="mt-4 hidden"></div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- PHASE 1: Quick Floating Log Entry Button -->
+  <button id="quick-log-entry" class="quick-log-btn" type="button" aria-label="Quick log trade entry">
+    + Log Entry
+  </button>
+
+  <!-- PHASE 2: Toast notification container (fixed top-right) -->
+  <div id="toast-container" class="fixed right-4 top-4 z-50 flex flex-col gap-2" aria-live="polite"></div>
+
+  <!-- PHASE 2: storage.js must load first – all other scripts depend on it -->
+  <script src="assets/js/storage.js" defer></script>
+
+  <!-- PHASE 1: App scripts -->
+  <script src="assets/js/main.js" defer></script>
+  <script src="assets/js/market.js" defer></script>
+  <script src="assets/js/streak.js" defer></script>
+
+  <!-- PHASE 3: journal.js loaded on all pages (safe guard in journal.js init) -->
+  <script src="assets/js/journal.js" defer></script>
+  <!-- PHASE 4: analyzer.js after storage.js – powers dashboard insight card -->
+  <script src="assets/js/analyzer.js" defer></script>
+  <!-- PHASE 2: logger.js loaded on index too (safe – exits if no #logger-form) -->
+  <script src="assets/js/logger.js" defer></script>
+  <!-- PHASE 5: chat.js safe on all pages (exits if no #chat-form) -->
+  <script src="assets/js/chat.js" defer></script>
 </body>
 </html>

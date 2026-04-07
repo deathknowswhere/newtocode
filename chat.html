@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAM – AI Trading Buddy Chat</title>
+
+  <!-- PHASE 5: Tailwind CDN + SAM theme -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/css/style.css" />
+
+  <!-- PHASE 5: Force full-height layout without scroll on body itself -->
+  <style>
+    html, body { height: 100%; overflow: hidden; }
+  </style>
+</head>
+<body class="sam-body text-slate-100">
+
+  <!-- PHASE 5: App shell – sidebar + chat column -->
+  <div class="h-screen flex overflow-hidden lg:grid lg:grid-cols-[280px_1fr]">
+
+    <!-- ── Left Sidebar (hidden on mobile) ─────────────────── -->
+    <!-- PHASE 5: Same sidebar pattern as index.html / journal.html -->
+    <aside class="sam-sidebar border-r border-slate-700/70 p-4 lg:p-6 hidden lg:flex lg:flex-col">
+      <!-- Brand -->
+      <div class="mb-8">
+        <p class="text-2xl font-extrabold tracking-wider text-white">SAM</p>
+        <p class="text-sm text-slate-400">Strategy Analysis Manager</p>
+      </div>
+
+      <!-- Nav links -->
+      <nav aria-label="Primary" class="space-y-2">
+        <a href="index.html"   class="sam-nav-item block w-full text-left">🏠 Dashboard</a>
+        <a href="log.html"     class="sam-nav-item block w-full text-left">✏️ Log Trade</a>
+        <a href="journal.html" class="sam-nav-item block w-full text-left">📖 Journal</a>
+        <!-- PHASE 5: This page is active -->
+        <a href="chat.html"    class="sam-nav-item is-active block w-full text-left">🤖 AI Buddy</a>
+      </nav>
+
+      <!-- PHASE 5: Context stats panel – shows trader's current data at a glance -->
+      <div class="mt-auto pt-6">
+        <div id="chat-sidebar-stats"
+             class="rounded-xl border border-slate-700/60 bg-slate-900/50 p-4 space-y-2">
+          <p class="font-semibold text-slate-300 text-sm mb-3">📊 Your Context</p>
+          <div class="text-xs text-slate-400 space-y-1.5">
+            <p id="chat-stat-trades">Loading…</p>
+            <p id="chat-stat-streak">—</p>
+            <p id="chat-stat-winrate">—</p>
+            <p id="chat-stat-today">—</p>
+          </div>
+        </div>
+        <!-- PHASE 5: Quick jump back to journal to log more context for SAM -->
+        <a href="log.html"
+           class="mt-3 sam-btn sam-btn-primary block text-center text-sm py-2">
+          + Log Trade
+        </a>
+      </div>
+    </aside>
+
+    <!-- ── Main Chat Column ─────────────────────────────────── -->
+    <!-- PHASE 5: flex-col, full height, messages scroll in middle -->
+    <main class="flex flex-col h-full min-h-0 overflow-hidden">
+
+      <!-- ── Chat Header ──────────────────────────────────── -->
+      <!-- PHASE 5: SAM avatar + status + controls -->
+      <header class="flex-shrink-0 sam-card border-b border-slate-700/70 px-4 py-3 sm:px-6
+                     flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <!-- Mobile back arrow -->
+          <a href="index.html"
+             class="lg:hidden text-slate-400 hover:text-white text-xl leading-none mr-1"
+             aria-label="Back to dashboard">←</a>
+          <!-- SAM avatar circle -->
+          <div class="chat-sam-avatar" aria-hidden="true">🔥</div>
+          <div>
+            <p class="font-bold text-white text-sm sm:text-base leading-tight">SAM</p>
+            <p class="text-xs text-emerald-400 leading-tight" id="chat-status-line">
+              AI Trading Buddy · Watching your data
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- PHASE 5: Clear chat history button -->
+          <button
+            id="chat-clear-btn"
+            type="button"
+            class="text-xs text-slate-500 hover:text-rose-400 transition-colors
+                   px-3 py-1.5 rounded-lg border border-slate-700/80 hover:border-rose-800/60"
+          >
+            Clear Chat
+          </button>
+          <a href="index.html"
+             class="hidden lg:inline-flex sam-btn sam-btn-secondary text-xs py-1.5">
+            ← Dashboard
+          </a>
+        </div>
+      </header>
+
+      <!-- ── Quick Question Chips ─────────────────────────── -->
+      <!-- PHASE 5: One-tap shortcuts to common trader questions -->
+      <div class="flex-shrink-0 px-4 sm:px-6 py-2.5 border-b border-slate-700/40 overflow-x-auto">
+        <div class="flex gap-2 min-w-max items-center">
+          <span class="text-xs text-slate-500 mr-1 whitespace-nowrap select-none">Quick ask:</span>
+          <!-- PHASE 5: Each chip sends its data-question as the user message -->
+          <button class="chat-quick-chip" data-question="Why am I losing on SPY lately? Look at my data and give me an honest assessment.">📉 Losing on SPY?</button>
+          <button class="chat-quick-chip" data-question="Analyze my last 5 trades and tell me the key patterns you're seeing.">🔍 Last 5 trades</button>
+          <button class="chat-quick-chip" data-question="How's my streak looking? Be honest – is my consistency good or do I need to fix something?">🔥 My streak</button>
+          <button class="chat-quick-chip" data-question="What setups are working best for me right now? Which ones should I focus on?">⚡ Best setups</button>
+          <button class="chat-quick-chip" data-question="What time of day am I trading best? And when should I stop?">⏰ Best session?</button>
+          <button class="chat-quick-chip" data-question="What's my biggest trading weakness based on my logged data?">🧠 My weakness</button>
+          <button class="chat-quick-chip" data-question="Explain the VWAP Reclaim setup – when does it work and when does it fail?">📚 VWAP Reclaim</button>
+          <button class="chat-quick-chip" data-question="How should I think about position sizing and risk management as a day trader?">💰 Risk management</button>
+        </div>
+      </div>
+
+      <!-- ── Messages Area (scrollable) ───────────────────── -->
+      <!-- PHASE 5: flex-1 + overflow-y-auto = scrollable message feed -->
+      <div
+        id="chat-messages"
+        class="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-5 space-y-4"
+        aria-live="polite"
+        aria-label="Chat conversation"
+      >
+        <!-- PHASE 5: Empty state shown when no messages exist yet.
+             chat.js hides this when messages are rendered. -->
+        <div id="chat-empty-state"
+             class="flex flex-col items-center justify-center h-full text-center py-12 px-4">
+          <div class="chat-sam-avatar-large mb-5" aria-hidden="true">🔥</div>
+          <p class="text-white font-extrabold text-xl mb-2">Hey, I'm SAM.</p>
+          <p class="text-slate-400 text-sm leading-relaxed max-w-sm">
+            Your AI trading buddy. I know every trade you've logged –
+            the wins, the revenge trades, the FOMO entries.<br/>
+            Ask me anything.
+          </p>
+          <!-- PHASE 5: Inline chips for empty state CTA -->
+          <div class="mt-6 flex flex-wrap gap-2 justify-center max-w-sm">
+            <button class="chat-quick-chip text-xs" data-question="What patterns do you see in my recent trades?">What patterns do you see?</button>
+            <button class="chat-quick-chip text-xs" data-question="Give me an honest assessment of my trading so far.">Honest assessment</button>
+            <button class="chat-quick-chip text-xs" data-question="What should I focus on improving this week?">What to improve?</button>
+          </div>
+        </div>
+        <!-- PHASE 5: Dynamic messages inserted here by chat.js renderMessages() -->
+      </div>
+
+      <!-- ── Typing Indicator (hidden by default) ──────────── -->
+      <!-- PHASE 5: SAM is thinking animation – shown during API call -->
+      <div id="chat-typing" class="hidden flex-shrink-0 px-4 sm:px-6 pb-2" aria-hidden="true">
+        <div class="flex items-end gap-2">
+          <div class="chat-sam-avatar-sm" aria-hidden="true">🔥</div>
+          <div class="chat-bubble-sam inline-flex items-center gap-2">
+            <div class="chat-typing-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <span class="text-xs text-emerald-400/60">SAM is thinking…</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Input Bar (sticky bottom) ────────────────────── -->
+      <!-- PHASE 5: Auto-resizing textarea + send button -->
+      <div class="flex-shrink-0 border-t border-slate-700/70 px-4 sm:px-6 py-3
+                  bg-slate-900/80 backdrop-blur-sm">
+        <form id="chat-form" class="flex gap-3 items-end" autocomplete="off" novalidate>
+          <div class="flex-1 relative">
+            <textarea
+              id="chat-input"
+              class="chat-textarea"
+              placeholder="Ask SAM about your trades, strategy, patterns…"
+              rows="1"
+              maxlength="1000"
+              aria-label="Message to SAM"
+            ></textarea>
+          </div>
+          <!-- PHASE 5: Send button – disabled while SAM is responding -->
+          <button
+            id="chat-send-btn"
+            type="submit"
+            class="sam-btn sam-btn-primary chat-send-btn flex-shrink-0"
+            aria-label="Send message"
+          >
+            ↑
+          </button>
+        </form>
+        <!-- PHASE 5: Hint about API key config -->
+        <p class="text-xs text-slate-600 mt-1.5 text-center">
+          SAM reads your real trade data ·
+          <a href="#" onclick="return false;"
+             class="text-slate-500 hover:text-emerald-500 transition-colors"
+             title="Open assets/js/analyzer.js and set your API key in SAM_AI_CONFIG.apiKey">
+            Add API key in analyzer.js
+          </a>
+          for live AI responses
+        </p>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- PHASE 5: Toast container (shared pattern) -->
+  <div id="toast-container"
+       class="fixed right-4 top-4 z-50 flex flex-col gap-2"
+       aria-live="polite"></div>
+
+  <!-- PHASE 5: Script load order is critical:
+       storage.js  → provides getTrades, getWatchlist, getStreakData, loadChatHistory, saveChatHistory
+       analyzer.js → provides getAIResponse (the public AI call wrapper)
+       chat.js     → uses both of the above                                          -->
+  <script src="assets/js/storage.js"  defer></script>
+  <script src="assets/js/analyzer.js" defer></script>
+  <script src="assets/js/chat.js"     defer></script>
+
+</body>
+</html>

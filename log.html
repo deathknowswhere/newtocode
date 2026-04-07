@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log Trade – SAM</title>
+
+  <!-- PHASE 2: Tailwind CDN – same as dashboard -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- PHASE 2: Shared app styles (Phase 1 base + Phase 2 logger additions) -->
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body class="sam-body min-h-screen text-slate-100">
+
+  <div class="min-h-screen lg:grid lg:grid-cols-[280px_1fr]">
+
+    <!-- PHASE 2: Sidebar – mirrors dashboard layout; "Log Trade" is active -->
+    <aside class="sam-sidebar border-r border-slate-700/70 p-4 lg:p-6">
+      <div class="mb-8">
+        <p class="text-2xl font-extrabold tracking-wider text-white">SAM</p>
+        <p class="text-sm text-slate-400">Strategy Analysis Manager</p>
+      </div>
+
+      <!-- PHASE 2: Sidebar uses <a> tags for real navigation between pages -->
+      <nav aria-label="Primary" class="space-y-2">
+        <a href="index.html" class="sam-nav-item block">Dashboard</a>
+        <a href="log.html"   class="sam-nav-item is-active block">Log Trade</a>
+        <span class="sam-nav-item block cursor-not-allowed opacity-40" title="Coming in Phase 3">Journal</span>
+        <span class="sam-nav-item block cursor-not-allowed opacity-40" title="Coming in Phase 4">AI Buddy</span>
+        <span class="sam-nav-item block cursor-not-allowed opacity-40">Streak Calendar</span>
+        <span class="sam-nav-item block cursor-not-allowed opacity-40">Settings</span>
+      </nav>
+    </aside>
+
+    <!-- PHASE 2: Main logger content area -->
+    <main class="p-4 sm:p-6 lg:p-8">
+
+      <!-- PHASE 2: Page header -->
+      <header class="sam-card mb-6 flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div>
+          <h1 class="text-xl font-bold text-white sm:text-2xl">Log Trade</h1>
+          <p class="text-slate-400">Under 15 seconds to capture what matters.</p>
+        </div>
+        <a href="index.html" class="sam-btn sam-btn-secondary self-start text-sm sm:self-auto">
+          ← Dashboard
+        </a>
+      </header>
+
+      <!-- PHASE 2: Mode tab switcher – Entry vs Exit -->
+      <div class="sam-card mb-6 flex gap-2 p-2">
+        <button id="tab-entry" class="logger-tab is-active-tab flex-1" type="button">
+          📈 Log New Entry
+        </button>
+        <button id="tab-exit" class="logger-tab flex-1" type="button">
+          🏁 Close Existing Trade
+        </button>
+      </div>
+
+      <!-- PHASE 2: Inline form error banner (hidden by default) -->
+      <div
+        id="form-error"
+        class="mb-4 hidden rounded-xl border border-rose-500/50 bg-rose-950/40 p-4 text-sm text-rose-300"
+        role="alert"
+        aria-live="assertive"
+      ></div>
+
+      <!-- ══════════════════════════════════════════════════════
+           PHASE 2: Main logger form
+           Both entry and exit sections live here; JS toggles
+           visibility. One submit button handles both modes.
+      ════════════════════════════════════════════════════════ -->
+      <form id="logger-form" class="space-y-5" novalidate autocomplete="off">
+
+        <!-- ──────────────────────────────────────────────────
+             PHASE 2: ENTRY SECTION (visible by default)
+        ────────────────────────────────────────────────────── -->
+        <section id="entry-section" class="space-y-5" aria-label="New Trade Entry">
+
+          <!-- Row 1: Symbol + Direction -->
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+            <!-- Symbol picker -->
+            <div class="sam-card p-5">
+              <label class="logger-label" for="symbol-select">Symbol</label>
+              <select id="symbol-select" class="sam-input mt-3">
+                <option value="">Loading watchlist…</option>
+              </select>
+              <!-- PHASE 2: Revealed when "Other" is selected in dropdown -->
+              <input
+                id="symbol-custom"
+                type="text"
+                placeholder="Type symbol (e.g. NVDA)"
+                class="sam-input mt-3 hidden uppercase"
+                maxlength="10"
+              />
+            </div>
+
+            <!-- Direction toggle – Long / Short radio-as-buttons -->
+            <div class="sam-card p-5">
+              <p class="logger-label">Direction</p>
+              <div class="mt-3 flex gap-3">
+
+                <!-- PHASE 2: Hidden radio + visible styled label = big clickable button -->
+                <label class="flex-1 cursor-pointer">
+                  <input type="radio" name="direction" value="long" class="sr-only" checked />
+                  <span class="direction-label direction-long block w-full rounded-xl border-2 border-transparent py-4 text-center text-base font-bold transition-all">
+                    📈 Long
+                  </span>
+                </label>
+
+                <label class="flex-1 cursor-pointer">
+                  <input type="radio" name="direction" value="short" class="sr-only" />
+                  <span class="direction-label direction-short block w-full rounded-xl border-2 border-transparent py-4 text-center text-base font-bold transition-all">
+                    📉 Short
+                  </span>
+                </label>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 2: Entry Price + Size -->
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div class="sam-card p-5">
+              <label class="logger-label" for="entry-price">Entry Price</label>
+              <input
+                id="entry-price"
+                type="number"
+                step="0.01"
+                min="0.01"
+                placeholder="0.00"
+                class="sam-input mt-3 text-xl font-bold"
+              />
+            </div>
+            <div class="sam-card p-5">
+              <label class="logger-label" for="entry-size">Size / Shares</label>
+              <input
+                id="entry-size"
+                type="number"
+                step="1"
+                min="1"
+                placeholder="100"
+                class="sam-input mt-3 text-xl font-bold"
+              />
+            </div>
+          </div>
+
+          <!-- Row 3: Emotion at Entry slider -->
+          <!-- PHASE 2: Gradient slider Red→Green gives instant visual feedback -->
+          <div class="sam-card p-5 sm:p-6">
+            <label class="logger-label" for="emotion-entry">Emotion at Entry</label>
+            <div class="mt-4 space-y-3">
+              <div class="flex items-center justify-between text-xs text-slate-400">
+                <span>😰 Fearful</span>
+                <span id="emotion-entry-label" class="font-semibold text-sm">5/10 – Neutral</span>
+                <span>😎 Confident</span>
+              </div>
+              <input
+                id="emotion-entry"
+                type="range"
+                min="1" max="10" step="1" value="5"
+                class="emotion-slider w-full"
+                aria-label="Emotion at entry: 1 fearful to 10 confident"
+              />
+              <!-- Tick marks -->
+              <div class="flex justify-between px-0.5 text-xs text-slate-600 select-none">
+                <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 4: Setup tag -->
+          <div class="sam-card p-5">
+            <label class="logger-label" for="setup-tag-select">Setup Tag</label>
+            <select id="setup-tag-select" class="sam-input mt-3">
+              <option value="">-- Select Setup --</option>
+              <option value="VWAP Reclaim">VWAP Reclaim</option>
+              <option value="OR Break">OR Break (Opening Range)</option>
+              <option value="Momentum Scalp">Momentum Scalp</option>
+              <option value="Gap Fill">Gap Fill</option>
+              <option value="FOMO">FOMO ⚠️ (Discipline Flag)</option>
+              <option value="Support Bounce">Support Bounce</option>
+              <option value="Resistance Break">Resistance Break</option>
+              <option value="Reversal">Reversal Play</option>
+              <option value="Trend Follow">Trend Follow</option>
+              <option value="News Catalyst">News Catalyst</option>
+              <option value="Pre-Market Gap">Pre-Market Gap</option>
+              <option value="__custom__">✏️ Custom (type below)</option>
+            </select>
+            <input
+              id="setup-tag-custom"
+              type="text"
+              placeholder="Describe your setup…"
+              class="sam-input mt-3 hidden"
+            />
+          </div>
+
+          <!-- Row 5: Notes textarea -->
+          <div class="sam-card p-5">
+            <label class="logger-label" for="entry-notes">Notes</label>
+            <textarea
+              id="entry-notes"
+              rows="3"
+              placeholder="Why this trade? What's the thesis? Any confluences or red flags?"
+              class="sam-input mt-3 resize-none"
+            ></textarea>
+          </div>
+
+          <!-- Row 6: Screenshot upload with drag-drop style area + preview -->
+          <!-- PHASE 2: Hidden file input behind stylable label element -->
+          <div class="sam-card p-5">
+            <p class="logger-label">Screenshot <span class="text-slate-500 font-normal">(optional)</span></p>
+            <div class="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start">
+              <label
+                class="screenshot-drop-zone shrink-0 sm:w-48"
+                for="entry-screenshot"
+                role="button"
+                tabindex="0"
+              >
+                <span class="text-3xl">📷</span>
+                <span class="mt-1 text-xs text-center leading-relaxed">
+                  Click to upload<br/>chart screenshot
+                </span>
+                <input id="entry-screenshot" type="file" accept="image/*" class="sr-only" />
+              </label>
+              <img
+                id="entry-screenshot-preview"
+                src=""
+                alt="Entry screenshot preview"
+                class="hidden max-h-44 rounded-xl border border-slate-700 object-cover shadow-lg"
+              />
+            </div>
+          </div>
+
+        </section>
+        <!-- ── END ENTRY SECTION ── -->
+
+        <!-- ──────────────────────────────────────────────────
+             PHASE 2: EXIT SECTION (hidden by default)
+             Revealed when "Close Existing Trade" tab is clicked,
+             or when log.html?tradeId=xxx is opened from dashboard.
+        ────────────────────────────────────────────────────── -->
+        <section id="exit-section" class="hidden space-y-5" aria-label="Close Existing Trade">
+
+          <!-- Select open trade to close -->
+          <div class="sam-card p-5">
+            <label class="logger-label" for="close-trade-select">Select Open Trade to Close</label>
+            <select id="close-trade-select" class="sam-input mt-3 text-base">
+              <option value="">Loading open trades…</option>
+            </select>
+          </div>
+
+          <!-- Exit Price -->
+          <div class="sam-card p-5">
+            <label class="logger-label" for="exit-price">Exit Price</label>
+            <input
+              id="exit-price"
+              type="number"
+              step="0.01"
+              min="0.01"
+              placeholder="0.00"
+              class="sam-input mt-3 text-xl font-bold"
+            />
+          </div>
+
+          <!-- Emotion at Exit slider -->
+          <div class="sam-card p-5 sm:p-6">
+            <label class="logger-label" for="emotion-exit">Emotion at Exit</label>
+            <div class="mt-4 space-y-3">
+              <div class="flex items-center justify-between text-xs text-slate-400">
+                <span>😰 Fearful</span>
+                <span id="emotion-exit-label" class="font-semibold text-sm">5/10 – Neutral</span>
+                <span>😎 Confident</span>
+              </div>
+              <input
+                id="emotion-exit"
+                type="range"
+                min="1" max="10" step="1" value="5"
+                class="emotion-slider w-full"
+                aria-label="Emotion at exit: 1 fearful to 10 confident"
+              />
+              <div class="flex justify-between px-0.5 text-xs text-slate-600 select-none">
+                <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Exit Notes -->
+          <div class="sam-card p-5">
+            <label class="logger-label" for="exit-notes">Exit Notes</label>
+            <textarea
+              id="exit-notes"
+              rows="3"
+              placeholder="Why did you exit? Planned exit or reactive? Any regrets?"
+              class="sam-input mt-3 resize-none"
+            ></textarea>
+          </div>
+
+          <!-- Exit Screenshot -->
+          <div class="sam-card p-5">
+            <p class="logger-label">Exit Screenshot <span class="text-slate-500 font-normal">(optional)</span></p>
+            <div class="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start">
+              <label
+                class="screenshot-drop-zone shrink-0 sm:w-48"
+                for="exit-screenshot"
+                role="button"
+                tabindex="0"
+              >
+                <span class="text-3xl">📷</span>
+                <span class="mt-1 text-xs text-center leading-relaxed">
+                  Click to upload<br/>exit chart screenshot
+                </span>
+                <input id="exit-screenshot" type="file" accept="image/*" class="sr-only" />
+              </label>
+              <img
+                id="exit-screenshot-preview"
+                src=""
+                alt="Exit screenshot preview"
+                class="hidden max-h-44 rounded-xl border border-slate-700 object-cover shadow-lg"
+              />
+            </div>
+          </div>
+
+        </section>
+        <!-- ── END EXIT SECTION ── -->
+
+        <!-- PHASE 2: Submit + Cancel action buttons -->
+        <div class="flex flex-col gap-3 pt-2 sm:flex-row">
+          <button
+            id="submit-btn"
+            type="submit"
+            class="sam-btn sam-btn-primary flex-1 py-4 text-lg font-extrabold tracking-wide"
+          >
+            💾 Save Entry
+          </button>
+          <a
+            href="index.html"
+            class="sam-btn sam-btn-secondary flex-1 py-4 text-center text-lg font-semibold"
+          >
+            ✕ Cancel
+          </a>
+        </div>
+
+      </form>
+      <!-- ── END FORM ── -->
+
+    </main>
+  </div>
+
+  <!-- PHASE 2: storage.js must load before logger.js (dependency order) -->
+  <script src="assets/js/storage.js" defer></script>
+  <script src="assets/js/logger.js"  defer></script>
+
+</body>
+</html>

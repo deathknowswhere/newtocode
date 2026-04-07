@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trade Journal – SAM</title>
+
+  <!-- PHASE 3: Tailwind CDN – shared with all SAM pages -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- PHASE 3: Shared SAM styles (Phase 1 base + Phase 2 logger + Phase 3 journal) -->
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body class="sam-body min-h-screen text-slate-100">
+
+  <!-- PHASE 3: Toast container (fixed top-right, mirrors dashboard) -->
+  <div id="toast-container" class="fixed right-4 top-4 z-50 flex flex-col gap-2" aria-live="polite"></div>
+
+  <div class="min-h-screen lg:grid lg:grid-cols-[280px_1fr]">
+
+    <!-- PHASE 3: Sidebar – "Journal" is the active item -->
+    <aside class="sam-sidebar border-r border-slate-700/70 p-4 lg:p-6">
+      <div class="mb-8">
+        <p class="text-2xl font-extrabold tracking-wider text-white">SAM</p>
+        <p class="text-sm text-slate-400">Strategy Analysis Manager</p>
+      </div>
+
+      <nav aria-label="Primary" class="space-y-2">
+        <a href="index.html"  class="sam-nav-item block">Dashboard</a>
+        <a href="log.html"    class="sam-nav-item block">Log Trade</a>
+        <!-- PHASE 3: Journal is active -->
+        <a href="journal.html" class="sam-nav-item is-active block">Journal</a>
+        <span class="sam-nav-item block cursor-not-allowed opacity-40" title="Coming in Phase 4">AI Buddy</span>
+        <span class="sam-nav-item block cursor-not-allowed opacity-40">Streak Calendar</span>
+        <span class="sam-nav-item block cursor-not-allowed opacity-40">Settings</span>
+      </nav>
+    </aside>
+
+    <!-- PHASE 3: Main Journal content -->
+    <main class="p-4 sm:p-6 lg:p-8">
+
+      <!-- PHASE 3: Page header with export button -->
+      <header class="sam-card mb-6 flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div>
+          <h1 class="text-xl font-bold text-white sm:text-2xl">Trade Journal</h1>
+          <p class="text-slate-400" id="journal-count">Loading…</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <!-- PHASE 3: Navigates to logger to add a new entry -->
+          <a href="log.html" class="sam-btn sam-btn-primary text-sm">+ Log Entry</a>
+          <!-- PHASE 3: Downloads all trades as JSON via journal.js handleExport() -->
+          <button id="export-btn" class="sam-btn sam-btn-secondary text-sm" type="button">
+            ⬇ Export JSON
+          </button>
+        </div>
+      </header>
+
+      <!-- ══════════════════════════════════════════════════════
+           PHASE 3: Filters Bar
+           Every control fires applyFilters() on change in journal.js.
+      ════════════════════════════════════════════════════════ -->
+      <section class="sam-card mb-5 p-4 sm:p-5" aria-label="Trade filters">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 class="text-sm font-bold uppercase tracking-widest text-slate-400">Filters</h2>
+          <!-- PHASE 3: Resets all filters back to defaults -->
+          <button id="clear-filters-btn" class="text-xs text-slate-500 hover:text-slate-300 transition-colors" type="button">
+            Clear all
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+
+          <!-- Search bar -->
+          <div class="xl:col-span-1">
+            <label class="journal-filter-label" for="jf-search">Search symbol or notes</label>
+            <input
+              id="jf-search"
+              type="search"
+              placeholder="NVDA, gap fill, FOMO…"
+              class="sam-input mt-1.5 text-sm"
+            />
+          </div>
+
+          <!-- Status filter -->
+          <div>
+            <label class="journal-filter-label" for="jf-status">Status</label>
+            <select id="jf-status" class="sam-input mt-1.5 text-sm">
+              <option value="all">All Trades</option>
+              <option value="open">Open Only</option>
+              <option value="closed">Closed Only</option>
+            </select>
+          </div>
+
+          <!-- Date range filter -->
+          <div>
+            <label class="journal-filter-label" for="jf-range">Date Range</label>
+            <select id="jf-range" class="sam-input mt-1.5 text-sm">
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
+
+          <!-- Emotion filter -->
+          <div>
+            <label class="journal-filter-label" for="jf-emotion">Emotion at Entry</label>
+            <select id="jf-emotion" class="sam-input mt-1.5 text-sm">
+              <option value="all">All Emotions</option>
+              <option value="high">High Confidence (8–10)</option>
+              <option value="neutral">Neutral (4–6)</option>
+              <option value="low">Fearful / Anxious (1–3)</option>
+            </select>
+          </div>
+
+          <!-- Session / time-of-day filter -->
+          <div>
+            <label class="journal-filter-label" for="jf-session">Session</label>
+            <select id="jf-session" class="sam-input mt-1.5 text-sm">
+              <option value="all">All Sessions</option>
+              <option value="preMarket">Pre-Market</option>
+              <option value="open">Market Open (9:30–11)</option>
+              <option value="lunchChop">Lunch Chop (11–2)</option>
+              <option value="powerHour">Power Hour (2–4)</option>
+              <option value="afterHours">After Hours</option>
+            </select>
+          </div>
+
+          <!-- Setup tag multi-select expander -->
+          <!-- PHASE 3: Checkboxes are built dynamically by _buildSetupTagFilters() in journal.js -->
+          <div class="xl:col-span-1">
+            <p class="journal-filter-label mb-1.5">Setup Tags</p>
+            <details class="relative">
+              <summary class="sam-input text-sm cursor-pointer list-none flex items-center justify-between">
+                <span class="text-slate-400">Select setups…</span>
+                <span class="text-slate-600 text-xs">▾</span>
+              </summary>
+              <div
+                id="setup-tag-filters"
+                class="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 p-3 space-y-2 shadow-2xl"
+              >
+                <!-- PHASE 3: Populated by _buildSetupTagFilters() in journal.js -->
+                <p class="text-xs text-slate-600">Loading setups…</p>
+              </div>
+            </details>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════
+           PHASE 3: Trade Table
+           Horizontally scrollable on small screens.
+           Rows click to open the detail modal.
+      ════════════════════════════════════════════════════════ -->
+      <section class="sam-card overflow-hidden mb-5" aria-label="Trades table">
+        <div class="overflow-x-auto">
+          <table class="journal-table w-full min-w-[900px]" role="grid">
+
+            <!-- PHASE 3: Sort headers – data-sort attr wired in initSortHeaders() -->
+            <thead>
+              <tr class="journal-thead-row">
+                <th class="jt-head" data-sort="date">
+                  Date / Time <span class="sort-arrow text-emerald-400"> ↓</span>
+                </th>
+                <th class="jt-head" data-sort="symbol">
+                  Symbol <span class="sort-arrow"></span>
+                </th>
+                <th class="jt-head">Dir</th>
+                <th class="jt-head">Entry $</th>
+                <th class="jt-head">Exit $</th>
+                <th class="jt-head">Size</th>
+                <th class="jt-head" data-sort="pnl">
+                  P&amp;L <span class="sort-arrow"></span>
+                </th>
+                <th class="jt-head">Emotion</th>
+                <th class="jt-head">Setup</th>
+                <th class="jt-head">Status</th>
+                <th class="jt-head sr-only">Actions</th>
+              </tr>
+            </thead>
+
+            <!-- PHASE 3: Populated entirely by renderTradeTable() in journal.js -->
+            <tbody id="journal-tbody">
+              <tr>
+                <td colspan="11" class="py-12 text-center text-slate-500">
+                  Loading trades…
+                </td>
+              </tr>
+            </tbody>
+
+          </table>
+        </div>
+
+        <!-- PHASE 3: Pagination controls (rendered by renderPagination()) -->
+        <div
+          id="journal-pagination"
+          class="flex items-center justify-center gap-4 border-t border-slate-700/60 p-4"
+        ></div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════
+           PHASE 3: Summary Stats Footer
+           Recomputed by renderSummaryFooter() on every filter change.
+      ════════════════════════════════════════════════════════ -->
+      <section class="sam-card p-4 sm:p-5" aria-label="Journal summary statistics">
+        <h2 class="mb-4 text-xs font-bold uppercase tracking-widest text-slate-500">
+          Summary — filtered view
+        </h2>
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+
+          <div class="summary-stat-card">
+            <p class="summary-label">Total Trades</p>
+            <p id="summary-total" class="summary-value text-white">—</p>
+          </div>
+
+          <div class="summary-stat-card">
+            <p class="summary-label">Total P&amp;L</p>
+            <!-- PHASE 3: Color applied dynamically in renderSummaryFooter() -->
+            <p id="summary-pnl" class="summary-value text-white">—</p>
+          </div>
+
+          <div class="summary-stat-card">
+            <p class="summary-label">Win Rate</p>
+            <p id="summary-win" class="summary-value text-white">—</p>
+          </div>
+
+          <div class="summary-stat-card">
+            <p class="summary-label">Avg Emotion</p>
+            <p id="summary-emotion" class="summary-value text-slate-300 text-base">—</p>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PHASE 3: Trade Detail Modal
+       Content injected by openTradeModal() in journal.js.
+       Backdrop click and Escape key both close it.
+  ════════════════════════════════════════════════════════════ -->
+  <div
+    id="trade-modal-overlay"
+    class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-title"
+  >
+    <!-- PHASE 3: Scrollable panel so long notes + screenshots don't overflow viewport -->
+    <div
+      id="trade-modal-panel"
+      class="modal-panel relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-700 p-6 shadow-2xl"
+    >
+      <!-- PHASE 3: Content injected dynamically by openTradeModal() -->
+    </div>
+  </div>
+
+  <!-- PHASE 3: Script load order matters – storage.js must come first -->
+  <script src="assets/js/storage.js" defer></script>
+  <script src="assets/js/logger.js"  defer></script>
+  <!-- PHASE 4: analyzer.js must load before journal.js so analyzeTrade() is available -->
+  <script src="assets/js/analyzer.js" defer></script>
+  <script src="assets/js/journal.js" defer></script>
+  <!-- PHASE 5: chat.js safe on journal page (exits if no #chat-form); registers _openSAMChat -->
+  <script src="assets/js/chat.js" defer></script>
+
+</body>
+</html>
